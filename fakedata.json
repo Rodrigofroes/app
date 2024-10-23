@@ -1,0 +1,110 @@
+{
+    "home": [
+        {
+            "total": 500.00
+        }
+    ],
+    "entrada": [
+        {
+            "total": 250.00
+        }
+    ],
+    "saida": [
+        {
+            "total": 250.00
+        }
+    ],
+    "lista": [
+        {
+            "id": 1,
+            "descricao": "Conta de luz",
+            "data": "2022-12-01",
+            "valor": 100.00
+        },
+        {
+            "id": 2,
+            "descricao": "Conta de luz",
+            "data": "2022-12-01",
+            "valor": 100.00
+        },
+        {
+            "id": 3,
+            "descricao": "Conta de luz",
+            "data": "2022-12-01",
+            "valor": 100.00
+        },
+        {
+            "id": 4,
+            "descricao": "Conta de luz",
+            "data": "2022-12-01",
+            "valor": 100.00
+        },
+        {
+            "id": 5,
+            "descricao": "Conta de luz",
+            "data": "2022-12-01",
+            "valor": 100.00
+        }
+    ],
+    "clintes": {
+        "total": 500,
+        "lista": [
+            {
+                "id": "1",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            },
+            {
+                "id": "2",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            },
+            {
+                "id": "2",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            },
+            {
+                "id": "3",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            },
+            {
+                "id": "4",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            },
+            {
+                "id": "5",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            },
+            {
+                "id": "6",
+                "nome": "João",
+                "data": "2022-12-01",
+                "cpf": "123.456.789-00",
+                "telefone": "(11) 1234-5678",
+                "endereco": "Rua teste, N° 21"
+            }
+        ]
+    }
+}
