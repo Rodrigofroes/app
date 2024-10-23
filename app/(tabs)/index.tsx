@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions, RefreshControl, FlatList } from "react-native";
+import { View, Text, StyleSheet, Dimensions, RefreshControl, FlatList, ScrollView } from "react-native";
 import Avatar from "../components/avatar.component";
 import Colors from "../constants/colors.constant";
 import { RFValue } from "react-native-responsive-fontsize";
@@ -7,11 +7,8 @@ import React, { useState } from "react";
 import data from '../../fakedata.json';
 import formatCurrency from "../utils/format.currency";
 import ChartPie from "../components/chart.pie.component";
-import { router } from "expo-router";
-
 
 const { width } = Dimensions.get('window');
-
 
 interface ItemProps {
     title: string;
@@ -47,14 +44,7 @@ export default function Home() {
     }
 
     return (
-        <ScrollView style={styles.container}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                />
-            }
-        >
+        <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerConteudo}>
                     <Text style={styles.inicioText}>Inicio</Text>
@@ -99,48 +89,51 @@ export default function Home() {
                     </Text>
                 </View>
             </View>
-            <View style={styles.corpo}>
-                <View >
-                    <View style={styles.corpoText}>
-                        <Text style={styles.grafTitulo}>Gráfico detalhado</Text>
-                        <Text>Úlitmos 7 dias</Text>
-                    </View>
-                    <View>
-                        <ChartPie />
-                    </View>
+
+
+            <View style={styles.corpoPie}>
+                <View style={styles.corpoText}>
+                    <Text style={styles.grafTitulo}>Gráfico detalhado</Text>
+                    <Text>Úlitmos 7 dias</Text>
                 </View>
+                <ChartPie />
             </View>
+
             <View style={styles.corpo}>
                 <View style={styles.corpoText}>
                     <Text style={styles.grafTitulo}>Últimos lançamentos</Text>
                 </View>
-                <View>
-                    <FlatList
-                        data={dados.lista}
-                        renderItem={({ item }) => <Item
-                            title={item.descricao.toString()}
-                            date={item.data.toString()}
-                            valor={item.valor}
+                <FlatList
+                    data={dados.lista}
+                    renderItem={({ item }) => <Item
+                        title={item.descricao.toString()}
+                        date={item.data.toString()}
+                        valor={item.valor}
+                    />}
+                    keyExtractor={item => item.id.toString()}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
                         />
-                        }
-                        keyExtractor={item => item.id.toString()}
-                    />
-                </View>
+                    }
+                    style={{ flexGrow: 1 }}
+                />
             </View>
-        </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: Colors.offWhite,
     },
     header: {
-        flex: 1,
         backgroundColor: Colors.primary,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
-        padding: 16,
+        padding: 13,
     },
     headerConteudo: {
         flexDirection: 'row',
@@ -166,9 +159,6 @@ const styles = StyleSheet.create({
         color: Colors.offWhite,
         fontSize: RFValue(16),
         fontWeight: '600',
-    },
-    refreshIcon: {
-        marginLeft: 8,
     },
     valor: {
         color: Colors.offWhite,
@@ -210,10 +200,10 @@ const styles = StyleSheet.create({
         fontSize: RFValue(12),
     },
     corpo: {
-        flex: 2,
         backgroundColor: Colors.offWhite,
         paddingHorizontal: 5,
         paddingVertical: 10,
+        flex: 1,
     },
     corpoText: {
         flexDirection: 'row',
@@ -241,4 +231,11 @@ const styles = StyleSheet.create({
     textDate: {
         fontSize: RFValue(12),
     },
+    corpoPie: {
+        backgroundColor: Colors.offWhite,
+        padding: 10,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        flex: 2,
+    }
 });

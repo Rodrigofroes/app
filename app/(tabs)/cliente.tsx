@@ -1,69 +1,128 @@
-import { View, Text, ScrollView, StyleSheet, FlatList, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, FlatList, RefreshControl } from "react-native";
+import Checkbox from 'expo-checkbox';
 import Avatar from "../components/avatar.component";
 import Colors from "../constants/colors.constant";
 import { RFValue } from "react-native-responsive-fontsize";
 import dados from '../../fakedata.json';
 import Input from "../components/input.component";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ButtonIcon from "../components/button.icon.component";
 import Button from "../components/button.component";
 import ModalInput from "../components/modal.client.component";
-import { FloatingAction } from "react-native-floating-action";
 import FoatingButton from "../components/floating.button.component";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ItemProps {
     id: string;
     title: string;
     date: string;
+    onCheckChange?: (id: string, value: boolean) => void;
+    checked?: boolean;
+    isTrash?: boolean;
 }
 
 export default function Cliente() {
-    let [clinte, setCliente] = useState<string>('');
+    const [clinte, setCliente] = useState<string>('');
+    const [filteredClientes, setFilteredClientes] = useState(dados.clintes.lista);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-    let [refreshing, setRefreshing] = useState<boolean>(false);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [isTrash, setIsTrash] = useState<boolean>(false);
+    const [checkedItems, setCheckedItems] = useState<any>({});
 
     function close() {
         setModalVisible(false);
     }
 
-    const Item = ({ id, title, date }: ItemProps) => (
+    const Item = ({ id, title, isTrash, date, onCheckChange, checked }: ItemProps) => (
         <View style={styles.item}>
             <View>
-                <Text style={styles.title}>{title}</Text>
-                <Text style={styles.textDate}>
-                    {new Date(date).toLocaleDateString()}
-                </Text>
+                <View>
+                    <Text style={styles.title}>{title}</Text>
+                    <Text style={styles.textDate}>
+                        {new Date(date).toLocaleDateString()}
+                    </Text>
+                </View>
             </View>
             <View>
-                <Button
-                    color={Colors.primary}
-                    title="Ver mais"
-                    onPress={() => {
-                        setSelectedClientId(id);
-                        setModalVisible(true);
-                    }}
-                />
+                {isTrash ? (
+                    <Checkbox
+                        value={checked}
+                        color={Colors.primary}
+                        onValueChange={(newValue) => onCheckChange(id, newValue)}
+                    />
+                ) : (
+                    <Button
+                        title="Detalhes"
+                        onPress={() => {
+                            setModalVisible(true);
+                            setSelectedClientId(id);
+                        }}
+                    />
+                )}
             </View>
         </View>
     );
+
+    const pesquisarCliente = (text: string) => {
+        const lista = dados.clintes.lista;
+        const filteredList = lista.filter((cliente) => {
+            return cliente.nome.toLowerCase().includes(text.toLowerCase());
+        });
+
+        if (text.length === 0) {
+            setFilteredClientes(lista);
+        }
+
+        setFilteredClientes(filteredList);
+    };
+
+    useEffect(() => {
+        pesquisarCliente(clinte);
+    }, [clinte]);
+
 
     const onRefresh = () => {
         setRefreshing(true);
         setTimeout(() => {
             setRefreshing(false);
         }, 2000);
+    };
+
+    const handleCheckChange = (id: string, newValue: boolean) => {
+        setCheckedItems((prevCheckedItems: any) => {
+            const updatedItems = { ...prevCheckedItems };
+
+            if (newValue) {
+                updatedItems[id] = true;
+            } else {
+                delete updatedItems[id];
+            }
+
+            console.log(updatedItems);
+            return updatedItems;
+        });
+    };
+
+    function deletarCliente() {
+        setIsTrash(true);
+
+        if (Object.keys(checkedItems).length === 0) return;
+
+        const lista = dados.clintes.lista;
+        const filteredList = lista.filter((cliente) => !checkedItems[cliente.id]);
+
+        setFilteredClientes(filteredList);
+        setCheckedItems({});
+        setIsTrash(false);
+    }
+
+    function adicionarCliente(){
+        setModalVisible(true);
     }
 
     return (
-        <ScrollView style={styles.container}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                />
-            }
-        >
+        <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerConteudo}>
                     <Text style={styles.inicioText}>Clientes</Text>
@@ -82,10 +141,19 @@ export default function Cliente() {
                 <View>
                     <View style={styles.headerInput}>
                         <View style={styles.inputContainer}>
-                            <Input placeholder="Procurar clientes..." value={clinte} onChange={setCliente} isSerch={true} />
+                            <Input
+                                placeholder="Procurar clientes..."
+                                value={clinte}
+                                onChange={setCliente}
+                            />
                         </View>
                         <View style={styles.button}>
-                            <ButtonIcon color={Colors.offWhite} icon="filter" onPress={() => { }} size={30} />
+                            <ButtonIcon
+                                color={Colors.offWhite}
+                                icon="filter"
+                                onPress={() => { pesquisarCliente(clinte) }}
+                                size={30}
+                            />
                         </View>
                     </View>
                 </View>
@@ -98,22 +166,52 @@ export default function Cliente() {
                     </Text>
                 </View>
             </View>
-            <View style={styles.list}>
-                <FlatList
-                    data={dados.clintes.lista}
-                    renderItem={({ item }) => <Item
-                        id={item.id.toString()}
-                        title={item.nome.toString()}
-                        date={item.data.toString()}
-                    />}
-                    keyExtractor={item => item.id.toString()}
+            <View style={styles.listContainer}>
+                {
+                    filteredClientes.length > 0 ? (
+                        <FlatList
+                            data={filteredClientes}
+                            renderItem={({ item }) => (
+                                <Item
+                                    key={item.id}
+                                    id={item.id}
+                                    title={item.nome}
+                                    date={item.data}
+                                    isTrash={isTrash}
+                                    checked={checkedItems[item.id] || false}
+                                    onCheckChange={handleCheckChange}
+                                />
+                            )}
+                            keyExtractor={(item) => item.id}
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={onRefresh}
+                                />
+                            }
+                        />
+                    ) : (
+                        <View style={styles.noClientsContainer}>
+                            <Ionicons name="sad-outline" size={50} color={Colors.blackInput} />
+                            <Text style={styles.noClientsText}>Nenhum cliente encontrado</Text>
+                        </View>
+                    )
+                }
+                <FoatingButton
+                    onAddClient={adicionarCliente}
+                    onTrashPress={deletarCliente}
+                    isTrashOpen={isTrash}
                 />
             </View>
-            <View style={styles.floating}>
-                <FoatingButton onTrashPress={() => {}}  onPress={() => { }} style={{ Button: 100 }} />
-            </View>
-            <ModalInput id={selectedClientId} modalVisible={modalVisible} close={close} />
-        </ScrollView>
+            {modalVisible && (
+                <ModalInput
+                    key={selectedClientId}
+                    id={selectedClientId?.toString() || ''}
+                    close={close}
+                    modalVisible={modalVisible}
+                />
+            )}
+        </View>
     );
 }
 
@@ -122,11 +220,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
-        flex: 1,
         backgroundColor: Colors.primary,
         borderBottomLeftRadius: 20,
         borderBottomRightRadius: 20,
         padding: 16,
+        paddingBottom: 30,
+        zIndex: 1,
     },
     headerConteudo: {
         flexDirection: 'row',
@@ -204,9 +303,27 @@ const styles = StyleSheet.create({
     textDate: {
         fontSize: RFValue(12),
     },
-    floating: {
+    floatingButton: {
         position: 'absolute',
-        bottom: 70,
-        right: 40,
+        bottom: 20,
+        right: 20,
     },
-})
+    listContainer: {
+        flex: 1,
+        backgroundColor: Colors.offWhite,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    noClientsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 20,
+    },
+    noClientsText: {
+        fontSize: RFValue(16),
+        color: Colors.blackInput,
+        marginTop: 10,
+        textAlign: 'center',
+    },
+});

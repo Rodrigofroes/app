@@ -1,15 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
-import ButtonIcon from './button.icon.component';
+import { View, StyleSheet, Animated, TouchableWithoutFeedback, Dimensions } from 'react-native';
 import Colors from '../constants/colors.constant';
+import { Ionicons } from '@expo/vector-icons';
+
+const { height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface FloatingButtonProps {
-    onPress: () => void;
     onTrashPress: () => void;
     style?: any;
+    onAddClient: () => void;
+    isTrashOpen?: boolean;
 }
 
-export default function FloatingButton({ onPress, onTrashPress, style }: FloatingButtonProps) {
+export default function FloatingButton({ onTrashPress, onAddClient, isTrashOpen }: FloatingButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
 
@@ -33,36 +37,54 @@ export default function FloatingButton({ onPress, onTrashPress, style }: Floatin
             {
                 translateY: animation.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, -80], // Muda para -80 para dar mais espaço ao movimento
+                    outputRange: [0, -140],
                 }),
             },
         ],
-        opacity: animation, // Controla a opacidade para aparecer/desaparecer
+        opacity: animation,
+    };
+
+    const addStyle = {
+        transform: [
+            {
+                scale: animation,
+            },
+            {
+                translateY: animation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -70],
+                }),
+            },
+        ],
+        opacity: animation,
     };
 
     return (
         <View style={styles.container}>
-            {/* Botão de Lixo */}
             <TouchableWithoutFeedback onPress={onTrashPress}>
-                <Animated.View style={[styles.button, styles.trash, trashStyle]}>
-                    <ButtonIcon
-                        name="trash"
-                        onPress={onTrashPress}
-                        color="#fff"
-                        backgroundColor="#f00"
-                    />
+                {
+                    isTrashOpen ? (
+                        <Animated.View style={[styles.button, styles.menu, trashStyle]}>
+                            <Ionicons name="checkmark" size={24} color={Colors.offWhite} />
+                        </Animated.View>
+
+                    ) : (
+                        <Animated.View style={[styles.button, styles.trash, trashStyle]}>
+                            <Ionicons name="trash-outline" size={24} color={Colors.offWhite} />
+                        </Animated.View>
+                    )
+                }
+            </TouchableWithoutFeedback>
+
+            <TouchableWithoutFeedback onPress={onAddClient}>
+                <Animated.View style={[styles.button, styles.menu, addStyle]}>
+                    <Ionicons name="add-outline" size={24} color={Colors.offWhite} />
                 </Animated.View>
             </TouchableWithoutFeedback>
-            
-            {/* Botão Principal */}
+
             <TouchableWithoutFeedback onPress={toggleMenu}>
                 <Animated.View style={[styles.button, styles.menu]}>
-                    <ButtonIcon
-                        name="plus"
-                        onPress={onPress}
-                        color="#fff"
-                        backgroundColor="#000"
-                    />
+                    <Ionicons name="ellipsis-vertical" size={24} color={Colors.offWhite} />
                 </Animated.View>
             </TouchableWithoutFeedback>
         </View>
@@ -73,12 +95,14 @@ const styles = StyleSheet.create({
     container: {
         position: 'absolute',
         alignItems: 'center',
+        bottom: 70,
+        right: 50,
     },
     button: {
         position: 'absolute',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        width: width * 0.15,
+        height: width * 0.15,
+        borderRadius: (width * 0.15) / 2,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#333',
@@ -91,6 +115,5 @@ const styles = StyleSheet.create({
     },
     trash: {
         backgroundColor: Colors.primary,
-        color: '#fff',
     },
 });

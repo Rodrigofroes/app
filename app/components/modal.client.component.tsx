@@ -15,15 +15,15 @@ interface ModalProps {
 }
 
 export default function ModalInput({ id, close, modalVisible }: ModalProps) {
-    let [name, setName] = useState('');
-    let [cpf, setCpf] = useState('');
-    let [telefone, setTelefone] = useState('');
-    let [endereco, setEndereco] = useState('');
+    let [name, setName] = useState<string>('');
+    let [cpf, setCpf] = useState<string>('');
+    let [telefone, setTelefone] = useState<string>('');
+    let [endereco, setEndereco] = useState<string>('');
+    let [error, setError] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
         if (id) {
             getDados(id);
-
         }
     }, [id]);
 
@@ -34,6 +34,38 @@ export default function ModalInput({ id, close, modalVisible }: ModalProps) {
             setCpf(dado.cpf);
             setTelefone(dado.telefone);
             setEndereco(dado.endereco);
+        }
+    }
+
+    function validateInput() {
+        let errors: { [key: string]: string } = {};
+        let regex = /^[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$/;
+
+        if (!name) {
+            errors.name = "Nome não pode ser vazio";
+        }
+
+        if (!cpf) {
+            errors.cpf = "CPF não pode ser vazio";
+        } else if (!regex.test(cpf) || cpf.length !== 14 || cpf === "000.000.000-00") {
+            errors.cpf = "CPF inválido";
+        }
+
+        if (!telefone) {
+            errors.telefone = "Telefone não pode ser vazio";
+        }
+
+        if (!endereco) {
+            errors.endereco = "Endereço não pode ser vazio";
+        }
+
+        setError(errors);
+        return Object.keys(errors).length === 0; 
+    }
+
+    function handleConfirm() {
+        if (validateInput()) {
+            close();
         }
     }
 
@@ -53,19 +85,23 @@ export default function ModalInput({ id, close, modalVisible }: ModalProps) {
                         <View style={styles.input}>
                             <View>
                                 <Input name="Nome:" placeholder="Nome Completo" value={name} onChange={setName} />
+                                {error.name && <Text style={styles.error}>* {error.name}</Text>}
                             </View>
                             <View>
                                 <Input name="CPF:" placeholder="CPF" value={cpf} onChange={setCpf} boardType={"number-pad"} />
+                                {error.cpf && <Text style={styles.error}>* {error.cpf}</Text>}
                             </View>
                             <View>
                                 <Input name="Telefone:" placeholder="Telefone" value={telefone} onChange={setTelefone} boardType={"number-pad"} />
+                                {error.telefone && <Text style={styles.error}>* {error.telefone}</Text>}
                             </View>
                             <View>
                                 <Input name="Endereço:" placeholder="Endereço" value={endereco} onChange={setEndereco} />
+                                {error.endereco && <Text style={styles.error}>* {error.endereco}</Text>}
                             </View>
                         </View>
                         <View>
-                            <ButtonPrimary title="Confirmar" onPress={close} />
+                            <ButtonPrimary title="Confirmar" onPress={handleConfirm} />
                         </View>
                     </View>
                 </View>
@@ -103,5 +139,9 @@ const styles = StyleSheet.create({
     input: {
         flexDirection: 'column',
         gap: 5,
-    }
+    },
+    error: {
+        color: Colors.error,
+        fontSize: RFValue(12),
+    },
 });
