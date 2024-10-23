@@ -4,6 +4,10 @@ import Input from "./components/input.component";
 import { useState } from "react";
 import { RFValue } from "react-native-responsive-fontsize";
 import Button from "./components/button.component";
+import LoginService from "./service/login.service";
+import { router } from "expo-router";
+import showToast from "./components/toast.component";
+
 
 export default function Login() {
   let [email, setEmail] = useState("");
@@ -28,18 +32,46 @@ export default function Login() {
     }
 
     setError(objeto);
-    return Object.keys(objeto).length > 0;
+    return Object.keys(objeto).length === 0;
   }
 
-  function handleLogin() {
+  function cleanInput() {
+    setEmail("");
+    setPassword("");
+    setError({});
+}
+
+
+  async function handleLogin() {
     setIsPressed(true);
 
     if (validarInput()) {
-      setIsPressed(false);
-      return;
+      let service = new LoginService();
+      let response = await service.login(email, password);
+      if (response) {
+
+        cleanInput();
+
+        showToast({
+          type: "success",
+          title: "Sucesso",
+          message: "Login efetuado com sucesso"
+        });
+
+        router.push("/(tabs)/");
+        setIsPressed(false);
+        return;
+        
+      }
     }
 
-    
+    showToast({
+      type: "error",
+      title: "Erro",
+      message: "Erro ao efetuar login"
+    });
+    setIsPressed(false);
+    return;
   }
 
   return (
