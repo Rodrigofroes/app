@@ -3,14 +3,14 @@ import Token from "./temp/token.temp";
 import { useEffect } from "react";
 
 export default function RootLayout() {
-  const token = new Token();
-
-  useEffect(() => {
-    if (!token.getToken()) {
-      router.push("/login");
-      return;
-    }
-  })
+  
+  // useEffect(() => {
+  //   const token = new Token();
+  //   if (!token.getToken()) {
+  //     router.push("/login");
+  //     return;
+  //   }
+  // })
 
   return (
     <Stack>

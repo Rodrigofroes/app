@@ -26,30 +26,50 @@ export default function Cliente() {
     const [filteredClientes, setFilteredClientes] = useState(dados.clintes.lista);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+    const [name, setName] = useState<string>('');
+    const [cpf, setCpf] = useState<string>('');
+    const [telefone, setTelefone] = useState<string>('');
+    const [endereco, setEndereco] = useState<string>('');
+    const [error, setError] = useState<{ [key: string]: string }>({});
     const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({});
     const [isTrash, setIsTrash] = useState<boolean>(false);
-    const [checkedItems, setCheckedItems] = useState<any>({});
 
-    function close() {
-        setModalVisible(false);
+    useEffect(() => {
+        if (selectedClientId) {
+            getDados(selectedClientId);
+        } else {
+            setName('');
+            setCpf('');
+            setTelefone('');
+            setEndereco('');
+        }
+    }, [selectedClientId]);
+
+    function getDados(id: string) {
+        const dado = dados.clintes.lista.find((dado) => dado.id === id);
+        if (dado) {
+            setName(dado.nome);
+            setCpf(dado.cpf);
+            setTelefone(dado.telefone);
+            setEndereco(dado.endereco);
+        }
     }
 
     const Item = ({ id, title, isTrash, date, onCheckChange, checked }: ItemProps) => (
         <View style={styles.item}>
             <View>
-                <View>
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.textDate}>
-                        {new Date(date).toLocaleDateString()}
-                    </Text>
-                </View>
+                <Text style={styles.title}>{title}</Text>
+                <Text style={styles.textDate}>
+                    {new Date(date).toLocaleDateString()}
+                </Text>
             </View>
             <View>
                 {isTrash ? (
                     <Checkbox
                         value={checked}
                         color={Colors.primary}
-                        onValueChange={(newValue) => onCheckChange(id, newValue)}
+                        onValueChange={(newValue) => onCheckChange?.(id, newValue)}
                     />
                 ) : (
                     <Button
@@ -72,15 +92,14 @@ export default function Cliente() {
 
         if (text.length === 0) {
             setFilteredClientes(lista);
+        } else {
+            setFilteredClientes(filteredList);
         }
-
-        setFilteredClientes(filteredList);
     };
 
     useEffect(() => {
         pesquisarCliente(clinte);
     }, [clinte]);
-
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -90,7 +109,7 @@ export default function Cliente() {
     };
 
     const handleCheckChange = (id: string, newValue: boolean) => {
-        setCheckedItems((prevCheckedItems: any) => {
+        setCheckedItems((prevCheckedItems) => {
             const updatedItems = { ...prevCheckedItems };
 
             if (newValue) {
@@ -104,22 +123,133 @@ export default function Cliente() {
         });
     };
 
-    function deletarCliente() {
-        setIsTrash(true);
+    function toggleTrash() {
+        setIsTrash((prevState) => !prevState);
+    }
 
-        if (Object.keys(checkedItems).length === 0) return;
+    function validateCheckedItems() {
+        return Object.keys(checkedItems).length > 0;
+    }
+
+    function deletarCliente() {
+        if (!isTrash) {
+            toggleTrash();
+            return;
+        }
+
+        if (!validateCheckedItems()) {
+            toggleTrash();
+            return;
+        }
 
         const lista = dados.clintes.lista;
         const filteredList = lista.filter((cliente) => !checkedItems[cliente.id]);
 
         setFilteredClientes(filteredList);
         setCheckedItems({});
-        setIsTrash(false);
+        toggleTrash();
     }
 
-    function adicionarCliente(){
+
+
+    function adicionarCliente() {
+        setSelectedClientId(null);
         setModalVisible(true);
+        setError({});
     }
+
+    const fields = [
+        {
+            name: "Nome:",
+            placeholder: "Nome Completo",
+            value: name,
+            onChange: setName,
+            error: error.name,
+        },
+        {
+            name: "CPF:",
+            placeholder: "CPF",
+            value: cpf,
+            onChange: setCpf,
+            error: error.cpf,
+            keyboardType: "number-pad",
+        },
+        {
+            name: "Telefone:",
+            placeholder: "Telefone",
+            value: telefone,
+            onChange: setTelefone,
+            error: error.telefone,
+            keyboardType: "number-pad",
+        },
+        {
+            name: "Endereço:",
+            placeholder: "Endereço",
+            value: endereco,
+            onChange: setEndereco,
+            error: error.endereco,
+        },
+    ];
+
+    const validateInput = () => {
+        let errors: { [key: string]: string } = {};
+        const cpfRegex = /^[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}\-?[0-9]{2}$/;
+
+        if (!name) {
+            errors.name = "Nome não pode ser vazio.";
+        }
+        if (!cpf || !cpfRegex.test(cpf)) {
+            errors.cpf = "CPF inválido.";
+        }
+        if (!telefone) {
+            errors.telefone = "Telefone não pode ser vazio.";
+        }
+        if (!endereco) {
+            errors.endereco = "Endereço não pode ser vazio.";
+        }
+
+        setError(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    function onConfirm() {
+        if (validateInput()) {
+            if (selectedClientId) {
+                const updatedList = dados.clintes.lista.map((cliente) => {
+                    if (cliente.id === selectedClientId) {
+                        return {
+                            ...cliente,
+                            nome: name,
+                            cpf,
+                            telefone,
+                            endereco,
+                        };
+                    }
+
+                    return cliente;
+                });
+
+                dados.clintes.lista = updatedList;
+                setFilteredClientes(updatedList);
+            } else {
+                const newId = Math.random().toString(36).substr(2, 9);
+                const newCliente = {
+                    id: newId,
+                    nome: name,
+                    cpf,
+                    telefone,
+                    endereco,
+                    data: new Date().toISOString(),
+                };
+
+                dados.clintes.lista.push(newCliente);
+                setFilteredClientes([...dados.clintes.lista]);
+            }
+
+            setModalVisible(false);
+        }
+    }
+
 
     return (
         <View style={styles.container}>
@@ -134,7 +264,7 @@ export default function Cliente() {
                     </View>
                     <View style={styles.totalContainer}>
                         <Text style={styles.valor}>
-                            {dados.clintes.total}
+                            {dados.clintes.lista.length}
                         </Text>
                     </View>
                 </View>
@@ -167,36 +297,31 @@ export default function Cliente() {
                 </View>
             </View>
             <View style={styles.listContainer}>
-                {
-                    filteredClientes.length > 0 ? (
-                        <FlatList
-                            data={filteredClientes}
-                            renderItem={({ item }) => (
-                                <Item
-                                    key={item.id}
-                                    id={item.id}
-                                    title={item.nome}
-                                    date={item.data}
-                                    isTrash={isTrash}
-                                    checked={checkedItems[item.id] || false}
-                                    onCheckChange={handleCheckChange}
-                                />
-                            )}
-                            keyExtractor={(item) => item.id}
-                            refreshControl={
-                                <RefreshControl
-                                    refreshing={refreshing}
-                                    onRefresh={onRefresh}
-                                />
-                            }
-                        />
-                    ) : (
-                        <View style={styles.noClientsContainer}>
-                            <Ionicons name="sad-outline" size={50} color={Colors.blackInput} />
-                            <Text style={styles.noClientsText}>Nenhum cliente encontrado</Text>
-                        </View>
-                    )
-                }
+                {filteredClientes.length > 0 ? (
+                    <FlatList
+                        data={filteredClientes}
+                        renderItem={({ item }) => (
+                            <Item
+                                key={item.id}
+                                id={item.id}
+                                title={item.nome}
+                                date={item.data}
+                                isTrash={isTrash}
+                                checked={checkedItems[item.id] || false}
+                                onCheckChange={handleCheckChange}
+                            />
+                        )}
+                        keyExtractor={(item) => item.id}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                        }
+                    />
+                ) : (
+                    <View style={styles.noClientsContainer}>
+                        <Ionicons name="sad-outline" size={50} color={Colors.blackInput} />
+                        <Text style={styles.noClientsText}>Nenhum cliente encontrado</Text>
+                    </View>
+                )}
                 <FoatingButton
                     onAddClient={adicionarCliente}
                     onTrashPress={deletarCliente}
@@ -205,10 +330,12 @@ export default function Cliente() {
             </View>
             {modalVisible && (
                 <ModalInput
-                    key={selectedClientId}
                     id={selectedClientId?.toString() || ''}
-                    close={close}
+                    close={() => setModalVisible(false)}
                     modalVisible={modalVisible}
+                    fields={fields}
+                    onConfirm={onConfirm}
+                    name={selectedClientId ? "Editar Cliente" : "Adicionar Cliente"}
                 />
             )}
         </View>
